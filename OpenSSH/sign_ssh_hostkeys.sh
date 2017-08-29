@@ -1,7 +1,6 @@
 #!/bin/bash
 
 SERVER_CA="server_ca"
-CA_CN="python.testrp.security.allizom.org"
 CA_EXPIRE="+64w"
 
 [ -f ${SERVER_CA} ] || {
@@ -9,11 +8,14 @@ CA_EXPIRE="+64w"
 	exit 128
 }
 
-[ $# -lt 1 ] && {
-	echo "USAGE $0 <ssh_host_key.pub> [ssh_host_key.pub] ..."
+[ $# -lt 2 ] && {
+	echo "USAGE $0 <ssh_host_cn> <ssh_host_key.pub> [ssh_host_key.pub] ..."
 	exit 127
 }
 
+HOST_CN=$1
+shift
+
 for i in $*; do
-	ssh-keygen -s ${SERVER_CA} -I host_auth_server -h -n ${CA_CN} -V ${CA_EXPIRE} "$i"
+	ssh-keygen -s ${SERVER_CA} -I host_auth_server -h -n ${HOST_CN} -V ${CA_EXPIRE} "$i"
 done
