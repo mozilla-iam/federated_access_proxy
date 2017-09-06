@@ -1,13 +1,8 @@
-#!/usr/bin/env python
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
-# Contributors: Guillaume Destuynder <gdestuynder@mozilla.com>
-
 from flask import Flask, request, session, jsonify
 from flask_session import Session
 import logging
 import os
+import subprocess
 import sys
 import time
 
@@ -16,6 +11,31 @@ app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 app.config.from_pyfile('accessproxy.cfg', silent=True)
 Session(app)
+
+def load_session_hack(cli_token):
+    """
+    Loads a session manually for a certain cli_token
+    """
+    # Attempt to load local session - this only works for file system sessions
+    # See https://github.com/pallets/werkzeug/blob/master/werkzeug/contrib/cache.py for format
+    # XXX FIXME replace this by a custom session handler for Flask
+    from werkzeug.contrib.cache import FileSystemCache
+    import pickle
+    cache = FileSystemCache(app.config['SESSION_FILE_DIR'], threshold=app.config['SESSION_FILE_THRESHOLD'], mode=app.config['SESSION_FILE_MODE'])
+    found = False
+    for fn in cache._list_dir():
+         with open(fn, 'rb') as f:
+             fot = pickle.load(f)
+             local_session = pickle.load(f)
+             if type(local_session) is not dict:
+                 continue
+             if local_session.get('cli_token') == cli_token:
+                 found = True
+                 break
+    if not found:
+        return None
+    return local_session
+
 
 def verify_cli_token(cli_token, session=session):
     """
@@ -28,6 +48,7 @@ def verify_cli_token(cli_token, session=session):
             return False
         return True
     else:
+        app.logger.error('No cli_token found')
         return False
 
 
@@ -38,18 +59,17 @@ def main():
     """
 
     # GET parameter set up
-    required_params = ['type', 'host', 'port', 'cli_token']
+    required_params = ['type', 'user', 'host', 'port', 'cli_token']
     params = request.args.to_dict()
     if set(required_params) != set(params.keys()):
         return 'Incorrect GET parameters'
     cli_token = params.get('cli_token')
     ssh_host = params.get('host')
     ssh_port = params.get('port')
-
+    ssh_user = params.get('user')
 
     # Reverse OIDC Proxy headers set up
     required_headers = ['X-Forwarded-User', 'X-Forwarded-Groups']
-    print(request.headers.keys())
     if not set(required_headers).issubset(request.headers.keys()):
         return 'Incorrect HEADERS'
     user = request.headers.get('X-Forwarded-User')
@@ -58,6 +78,10 @@ def main():
     # Session set up
     session['username'] = user
     session['groups'] = groups
+    session['ssh_user'] = ssh_user
+    session['ssh_port'] = ssh_port
+    session['ssh_host'] = ssh_host
+
     if (session.get('cli_token') == None):
         session['cli_token'] = cli_token
     else:
@@ -82,24 +106,8 @@ def api_session():
     response = {'cli_token_authenticated': False,
                'ap_session': ''}
 
-    # Attempt to load local session - this only works for file system sessions
-    # See https://github.com/pallets/werkzeug/blob/master/werkzeug/contrib/cache.py for format
-    # XXX FIXME replace this by a custom session handler for Flask
-    from werkzeug.contrib.cache import FileSystemCache
-    import pickle
-    cache = FileSystemCache(app.config['SESSION_FILE_DIR'], threshold=app.config['SESSION_FILE_THRESHOLD'], mode=app.config['SESSION_FILE_MODE'])
-    found = False
-    for fn in cache._list_dir():
-         with open(fn, 'rb') as f:
-             fot = pickle.load(f)
-             local_session = pickle.load(f)
-             if type(local_session) is not dict:
-                 continue
-             if local_session.get('cli_token') == cli_token:
-                 found = True
-                 break
-    # Is the client pooling, waiting for the user to log in interactively?
-    if not found:
+    local_session = load_session_hack(cli_token)
+    if not local_session:
         app.logger.debug('We do not yet have session data for the cli client')
         return jsonify(response), 202
 
@@ -127,15 +135,45 @@ def api_ssh():
     Requests a new, valid SSH certificate
     """
 
+    SSH_GEN_SCRIPT='/var/www/accessproxy/scripts/04_gen_signed_client_key.sh'
+    SSH_FILES_DIR='/dev/shm/ssh/'
+    SSH_KEY_FILE=SSH_FILES_DIR+'key_file'
+
+    response = {'private_key': '', 'public_key': '', 'certificate': ''}
+
     # GET parameter set up
     required_params = ['type', 'host', 'port', 'cli_token']
     params = request.args.to_dict()
-    if set(required_params) != set(params.keys()):
-        return 'Incorrect GET parameters'
     cli_token = request.args.get('cli_token')
-    if not verify_cli_token(cli_token):
+
+    local_session = load_session_hack(cli_token)
+    if not verify_cli_token(cli_token, session=local_session):
         return 'Access denied', 403
 
-    response = {'certificate': {'private_key': '', 'public_key': ''}}
+    # Get user supplied username, if not available use profile user name
+    username = local_session.get('ssh_user')
+    if not username:
+        username = local_session.get('username')
+        username = username.replace('@', '_')
+    ecode = subprocess.call([SSH_GEN_SCRIPT, username])
+    app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
+    if ecode !=0:
+        return 'SSH credentials generation failed', 500
+    try:
+        with open(SSH_KEY_FILE, 'rb') as fd:
+            response['private_key'] = fd.read()
+        os.remove(SSH_KEY_FILE)
+        with open(SSH_KEY_FILE+'.pub', 'rb') as fd:
+            response['public_key'] = fd.read()
+        os.remove(SSH_KEY_FILE+'.pub')
+        with open(SSH_KEY_FILE+'-cert.pub', 'rb') as fd:
+            response['certificate'] = fd.read()
+        os.remove(SSH_KEY_FILE+'-cert.pub')
+    except:
+        import traceback
+        app.logger.debug(traceback.format_exc())
+        app.logger.debug('Failed to read SSH credentials')
+        return 'SSH credentials generation failed', 500
 
+    app.logger.debug('Deliverying SSH key data to cli client')
     return jsonify(response), 200

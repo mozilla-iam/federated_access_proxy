@@ -1,11 +1,13 @@
 #!/bin/bash
-source settings.conf || {
+source $(dirname ${BASH_SOURCE[0]})/settings.conf || {
 	echo "settings.conf file required"
 	exit 127
 }
 
+cd $(dirname ${BASH_SOURCE[0]})
+
 [ -f ${CA_USER_KEY} ] || {
-	echo "No $(CA_SER_KEY) found, I can't sign without a CA!"
+	echo "No ${CA_USER_KEY} found, I can't sign without a CA!"
 	exit 128
 }
 

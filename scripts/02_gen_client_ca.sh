@@ -1,8 +1,10 @@
 #!/bin/bash
-source settings.conf || {
+source $(dirname ${BASH_SOURCE[0]})/settings.conf || {
 	echo "settings.conf file required"
 	exit 127
 }
+
+cd $(dirname ${BASH_SOURCE[0]})
 
 function keygen()
 {
