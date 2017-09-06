@@ -1,4 +1,4 @@
-from flask import Flask, request, session, jsonify
+from flask import Flask, request, session, jsonify,  render_template
 from flask_session import Session
 import logging
 import os
@@ -62,7 +62,7 @@ def main():
     required_params = ['type', 'user', 'host', 'port', 'cli_token']
     params = request.args.to_dict()
     if set(required_params) != set(params.keys()):
-        return 'Incorrect GET parameters'
+        return render_template('denied.html', reason='Incorrect GET parameters'), 403
     cli_token = params.get('cli_token')
     ssh_host = params.get('host')
     ssh_port = params.get('port')
@@ -71,7 +71,7 @@ def main():
     # Reverse OIDC Proxy headers set up
     required_headers = ['X-Forwarded-User', 'X-Forwarded-Groups']
     if not set(required_headers).issubset(request.headers.keys()):
-        return 'Incorrect HEADERS'
+        return render_template('denied.html', reason='Incorrect HEADERS'), 403
     user = request.headers.get('X-Forwarded-User')
     groups = request.headers.get('X-Forwarded-Groups')
 
@@ -86,7 +86,7 @@ def main():
         session['cli_token'] = cli_token
     else:
         if not verify_cli_token(cli_token):
-            return 'cli token verification failure - access denied', 403
+            return render_template('denied.html', reason='cli token verification failure'), 403
     # Reverse proxy cookie
     ap_session = request.cookies.get('oidc_session')
     
@@ -95,7 +95,7 @@ def main():
     app.logger.info('New user logged in {} (sid {}) requesting access to {}:{}'.format(user, session.sid, ssh_host, ssh_port))
     app.logger.debug(str(ap_session))
 
-    return '<html><head><title>Access Proxy</title></head><body>Welcome to the access proxy.<br/>Parameters: {}<br/>User: {}<br/>Groups: {}<br/>Session: {}<br/><p>You may now close this window</p></body></html>'.format(str(params), user, groups, str(session).strip('<>'))
+    return render_template('main.html')
 
 @app.route('/api/session', methods=['GET'])
 def api_session():
@@ -112,12 +112,12 @@ def api_session():
         return jsonify(response), 202
 
     if not verify_cli_token(cli_token, session=local_session):
-        return 'cli token verification failure - access denied', 403
+        return render_template('denied.html', reason='cli token verification failure'), 403
 
     if (local_session.get('sent_ap_session')):
         app.logger.error('Same cli client tried to get the ap_session data more than once (security risk), destroying session')
         session.clear()
-        return 'Session was already issued, access denied', 403
+        return render_template('denied.html', reason='Session was already issued'), 403
 
     response['ap_session'] = local_session.get('ap_session')
     response['cli_token_authenticated'] =  True
@@ -158,7 +158,7 @@ def api_ssh():
     ecode = subprocess.call([SSH_GEN_SCRIPT, username])
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
     if ecode !=0:
-        return 'SSH credentials generation failed', 500
+        return render_template('denied.html', 'SSH credentials generation failed'), 500
     try:
         with open(SSH_KEY_FILE, 'rb') as fd:
             response['private_key'] = fd.read()
@@ -173,7 +173,7 @@ def api_ssh():
         import traceback
         app.logger.debug(traceback.format_exc())
         app.logger.debug('Failed to read SSH credentials')
-        return 'SSH credentials generation failed', 500
+        return render_template('denied.html', 'SSH credentials generation failed'), 500
 
     app.logger.debug('Deliverying SSH key data to cli client')
     return jsonify(response), 200

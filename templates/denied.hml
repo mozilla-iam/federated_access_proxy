@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>Permission denied</h1>
+<p>Your session could not be authenticated. Command-line access will fail.<p>
+<p>{% if reason %}{{ reason }}{% endif %}</p>
+{% endblock %}
