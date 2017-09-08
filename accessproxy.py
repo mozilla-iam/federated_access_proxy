@@ -1,6 +1,9 @@
 from flask import Flask, request, session, jsonify,  render_template
 from flask_session import Session
+from flask_assets import Environment, Bundle
+
 import logging
+import mimetypes
 import os
 import subprocess
 import sys
@@ -11,6 +14,15 @@ app.logger.addHandler(logging.StreamHandler(sys.stdout))
 app.logger.setLevel(logging.DEBUG)
 app.config.from_pyfile('accessproxy.cfg', silent=True)
 Session(app)
+
+assets = Environment(app)
+js = Bundle('js/base.js', filters='jsmin', output='js/gen/packed.js')
+assets.register('js_all', js)
+sass = Bundle('css/base.scss', filters='scss')
+css = Bundle(sass, filters='cssmin', output='css/gen/all.css')
+assets.register('css_all', css)
+# Required to load svg
+mimetypes.add_type('image/svg+xml', '.svg')
 
 def load_session_hack(cli_token):
     """
@@ -88,11 +100,11 @@ def main():
         if not verify_cli_token(cli_token):
             return render_template('denied.html', reason='cli token verification failure'), 403
     # Reverse proxy cookie
-    ap_session = request.cookies.get('oidc_session')
-    
+    ap_session = request.cookies.get(app.config['REVERSE_PROXY_COOKIE_NAME'])
+
     session['ap_session'] = ap_session
 
-    app.logger.info('New user logged in {} (sid {}) requesting access to {}:{}'.format(user, session.sid, ssh_host, ssh_port))
+    app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user, session.sid, ap_session, ssh_host, ssh_port))
     app.logger.debug(str(ap_session))
 
     return render_template('main.html')
