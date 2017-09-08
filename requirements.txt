@@ -1,0 +1,12 @@
+click==6.7
+cssmin==0.2.0
+Flask==0.12.2
+Flask-Assets==0.12
+Flask-Session==0.3.1
+itsdangerous==0.24
+Jinja2==2.9.6
+jsmin==2.2.2
+MarkupSafe==1.0
+sass==2.3
+webassets==0.12.1
+Werkzeug==0.12.2
