@@ -1,3 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Contributors: Guillaume Destuynder <gdestuynder@mozilla.com>
+
 from flask import Flask, request, session, jsonify,  render_template
 from flask_session import Session
 from flask_assets import Environment, Bundle
@@ -9,10 +15,12 @@ import subprocess
 import sys
 import time
 
+import config
+
 app = Flask(__name__)
+app.config.from_object(config.Config(app).settings)
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
-app.logger.setLevel(logging.DEBUG)
-app.config.from_pyfile('accessproxy.cfg', silent=True)
+app.logger.setLevel(app.config.get('LOG_LEVEL'))
 Session(app)
 
 assets = Environment(app)
@@ -100,7 +108,7 @@ def main():
         if not verify_cli_token(cli_token):
             return render_template('denied.html', reason='cli token verification failure'), 403
     # Reverse proxy cookie
-    ap_session = request.cookies.get(app.config['REVERSE_PROXY_COOKIE_NAME'])
+    ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
 
     session['ap_session'] = ap_session
 
