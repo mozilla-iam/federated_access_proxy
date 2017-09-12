@@ -2,7 +2,7 @@
 
 # Federated Access Proxy
 
-![Diagram](/docs/images/hl_diagram.jpg?raw=true "High-level diagram")
+![Diagram](/docs/images/hl_diagram.png?raw=true "High-level diagram")
 
 This is a BeyondCorp-style federated access proxy.  Beyond corp is a [USENIX white
 paper](https://www.usenix.org/system/files/login/articles/login_dec14_02_ward.pdf)/[concept](https://research.google.com/pubs/pub43231.html)
