@@ -22,3 +22,13 @@ example SSH protocol can be proxied over HTTPS, or not proxied, at the choice of
 
 The concepts and code behind the federated acecss proxy can be applied to any command-line client for any protocol that
 requires some kind of access token as proof of being authenticated/identified with an identity provider.
+
+# Deployment
+
+## Credstash
+
+Values required:
+- `accessproxy.flask_secret`
+- `accessproxy.discovery_url`
+- `accessproxy.client_secret`
+- `accessproxy.client_id`
