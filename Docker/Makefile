@@ -7,6 +7,9 @@ all: build
 build: Dockerfile
 	docker build -t $(IMAGE_NAME) .
 
+compose: docker-compose.yml
+	docker-compose up
+
 run: Dockerfile
 	docker run -i -p $(PORTS)  -t $(IMAGE_NAME)
 

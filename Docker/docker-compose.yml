@@ -1,0 +1,15 @@
+version: '2'
+services:
+    web:
+        image: 656532927350.dkr.ecr.us-west-2.amazonaws.com/accessproxy:latest
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        environment:
+            - ENVIRONMENT=Production
+            - AWS_DEFAULT_REGION=us-west-2
+        restart: always
+        ports:
+            - 80:80
+        networks:
+            - default
