@@ -1,5 +1,6 @@
-IMAGE_NAME = "ap"
+IMAGE_NAME = "accessproxy"
 PORTS = "8080:80"
+HUBURL = "656532927350.dkr.ecr.us-west-2.amazonaws.com"
 
 all: build
 
@@ -8,3 +9,14 @@ build: Dockerfile
 
 run: Dockerfile
 	docker run -i -p $(PORTS)  -t $(IMAGE_NAME)
+
+awslogin: Dockerfile build
+	# See also https://us-west-2.console.aws.amazon.com/ecs/home?region=us-west-2#/firstRun
+	@echo "Logging you in the hub at $(HUB_URL)"
+	aws ecr get-login --no-include-email --region us-west-2  | bash
+	@echo "Tagging latest built image"
+	docker tag $(IMAGE_NAME):latest $(HUB_URL)/$(NAME):latest
+	@echo "Uploading image to hub"
+	docker push $(HUB_URL)/$(IMAGE_NAME):latest
+
+.PHONY: build run awslogin
