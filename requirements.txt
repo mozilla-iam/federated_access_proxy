@@ -21,5 +21,6 @@ python-dateutil==2.6.1
 s3transfer==0.1.11
 sass==2.3
 six==1.10.0
+watchtower==0.4.0
 webassets==0.12.1
 Werkzeug==0.12.2
