@@ -27,6 +27,8 @@ requires some kind of access token as proof of being authenticated/identified wi
 
 ## Credstash
 
+See https://github.com/fugue/credstash for setup.
+
 Values required:
 - `accessproxy.flask_secret`
 - `accessproxy.discovery_url`
