@@ -22,11 +22,9 @@ class Config(object):
         if self.environment == 'Production':
             self.app.logger.addHandler(watchtower.CloudWatchLogHandler())
             return ProductionConfig()
-        if self.environment == 'Production':
+        elif self.environment == 'Staging':
             self.app.logger.addHandler(watchtower.CloudWatchLogHandler())
             return StagingConfig()
-        elif self.environment == 'Development':
-            return DevelopmentConfig()
         else:
             return DevelopmentConfig()
 
