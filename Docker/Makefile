@@ -8,12 +8,15 @@ build: Dockerfile
 	docker build -t $(IMAGE_NAME) .
 
 compose: compose/docker-compose.base.yml
+	touch compose/local.env
 	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
 
 compose-staging: compose/docker-compose.base.yml
+	touch compose/local.env
 	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
 
 compose-production: compose/docker-compose.base.yml
+	touch compose/local.env
 	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
 
 run: Dockerfile
