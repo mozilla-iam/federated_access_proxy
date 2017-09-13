@@ -3,3 +3,4 @@ services:
     web:
         env_file:
             - development.env
+            - local.env
