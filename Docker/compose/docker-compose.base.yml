@@ -4,6 +4,7 @@ services:
         build:
             context: ../
             dockerfile: Dockerfile
+        image: accessproxy:latest
         volumes:
             - sessions:/var/tmp/sessions
         restart: always
