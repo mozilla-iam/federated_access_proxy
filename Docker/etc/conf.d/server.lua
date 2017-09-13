@@ -1,11 +1,28 @@
 -- lua-resty-openidc options
 
 -- Gets values from credstash
+local function split(inputstr, sep)
+  if sep == nil then
+    sep = "%s"
+  end
+  local t={} ; i=1
+  for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+    t[i] = str
+    i = i + 1
+  end
+  return t
+end
+
 local function cs_get(key)
-	local f = io.popen("credstash get "..key)
-	r = f:read()
-	f:close()
-	return r
+  local fe = os.getenv(split(key, ".")[2])
+  if (fe) then
+      return fe
+  end
+
+  local f = io.popen("/srv/app/venv/bin/credstash get "..key)
+  local r = f:read()
+  f:close()
+  return r
 end
 
 opts = {
