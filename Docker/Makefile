@@ -13,11 +13,11 @@ compose: compose/docker-compose.base.yml
 
 compose-staging: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.stg.yml up
 
 compose-production: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.prod.yml up
 
 run: Dockerfile
 	docker run -i -p $(PORTS)  -t $(IMAGE_NAME)
