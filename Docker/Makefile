@@ -28,4 +28,4 @@ awslogin: Dockerfile build
 	@echo "Uploading image to hub"
 	docker push $(HUB_URL)/$(IMAGE_NAME):latest
 
-.PHONY: build run awslogin
+.PHONY: build run awslogin compose compose-staging compose-production
