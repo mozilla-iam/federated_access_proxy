@@ -1,0 +1,18 @@
+version: '2'
+services:
+    web:
+        build:
+            context: ../
+            dockerfile: Dockerfile
+        volumes:
+            - sessions:/var/tmp/sessions
+        restart: always
+        ports:
+            - 80:80
+        networks:
+            - default
+volumes:
+    sessions:
+
+networks:
+    default:

@@ -54,7 +54,6 @@ class StagingConfig(DefaultConfig):
     DEBUG = False
 
 class DevelopmentConfig(DefaultConfig):
-    PREFERRED_URL_SCHEME = 'http'
     DEVELOPMENT = True
     DEBUG = True
     SECRET_KEY = 'abab123123'
