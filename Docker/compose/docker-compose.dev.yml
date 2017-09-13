@@ -1,0 +1,6 @@
+version: '2'
+services:
+    web:
+        env_file:
+            - development.env
+            - local.env

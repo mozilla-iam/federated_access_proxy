@@ -22,11 +22,9 @@ class Config(object):
         if self.environment == 'Production':
             self.app.logger.addHandler(watchtower.CloudWatchLogHandler())
             return ProductionConfig()
-        if self.environment == 'Production':
+        elif self.environment == 'Staging':
             self.app.logger.addHandler(watchtower.CloudWatchLogHandler())
             return StagingConfig()
-        elif self.environment == 'Development':
-            return DevelopmentConfig()
         else:
             return DevelopmentConfig()
 
@@ -56,7 +54,6 @@ class StagingConfig(DefaultConfig):
     DEBUG = False
 
 class DevelopmentConfig(DefaultConfig):
-    PREFERRED_URL_SCHEME = 'http'
     DEVELOPMENT = True
     DEBUG = True
     SECRET_KEY = 'abab123123'

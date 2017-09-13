@@ -53,4 +53,4 @@ STOPSIGNAL SIGTERM
 # Init
 USER root
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["bash", "-c", "openresty -g 'daemon on;' && sudo -u user sh -c 'source venv/bin/activate && /srv/app/start.sh'"]
+CMD ["bash", "-c", "openresty -g 'daemon on;' && sudo -u user -E sh -c 'source venv/bin/activate && /srv/app/start.sh'"]

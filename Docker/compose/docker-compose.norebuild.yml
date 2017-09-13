@@ -1,0 +1,4 @@
+version: '2'
+services:
+    web:
+        image: 656532927350.dkr.ecr.us-west-2.amazonaws.com/accessproxy:latest
