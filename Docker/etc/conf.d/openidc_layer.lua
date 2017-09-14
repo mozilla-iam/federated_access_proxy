@@ -3,14 +3,8 @@
 local oidc = require("resty.openidc")
 local cjson = require( "cjson" )
 
--- Load config
-local f, e = loadfile(ngx.var.config_loader)
-if f == nil then
-  ngx.log(ngx.ERR, "can't initialize loadfile: "..e)
-end
-ok, e = pcall(f)
-if not ok then
-  ngx.log(ngx.ERR, "can't load configuration: "..e)
+if not opts then
+  ngx.log(ngx.ERR, "no configuration found")
 end
 
 -- Authenticate with lua-resty-openidc if necessary (this will return quickly if no authentication is necessary)
