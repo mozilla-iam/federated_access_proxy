@@ -25,6 +25,21 @@ requires some kind of access token as proof of being authenticated/identified wi
 
 # Deployment
 
+## Docker
+- `cd Docker`
+- Build the image
+  - `make` 
+- Start the dev local image
+  - Populate `compose/local.env` as desired, these are the credstash variables mainly, such as `flask_secret=...` or
+    `client_secret=...`
+  - `make compose`
+- Start the stage, prod images (uses remote image, feel free to override it)
+  - `make compose-staging`, `make compose-production`, ...
+
+## Cloudformation
+- `./deploy-{dev,prod,...}.sh`
+- it reads from `cloudformation/*`
+
 ## Credstash
 
 See https://github.com/fugue/credstash for setup.
