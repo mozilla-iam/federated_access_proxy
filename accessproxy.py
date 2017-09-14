@@ -162,7 +162,7 @@ def api_ssh():
     Requests a new, valid SSH certificate
     """
 
-    SSH_GEN_SCRIPT = '/var/www/accessproxy/scripts/04_gen_signed_client_key.sh'
+    SSH_GEN_SCRIPT = './scripts/04_gen_signed_client_key.sh'
     SSH_FILES_DIR = '/dev/shm/ssh/'
     SSH_KEY_FILE = SSH_FILES_DIR + 'key_file'
 
