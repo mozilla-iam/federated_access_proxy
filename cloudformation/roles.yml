@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Mozilla AccessProxy Roles"
+Resources:
+  AccessProxyRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      RoleName: AccessProxy-Role
+  AccessProxyInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    DependsOn: AccessProxyRole
+    Properties:
+      InstanceProfileName: "AccessProxy-instance-profile"
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxyCodePipelineAccess:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "s3:GetBucketAcl"
+              - "s3:GetBucketCORS"
+              - "s3:GetBucketLocation"
+              - "s3:GetBucketLogging"
+              - "s3:GetBucketNotification"
+              - "s3:GetBucketPolicy"
+              - "s3:GetBucketRequestPayment"
+              - "s3:GetBucketTagging"
+              - "s3:GetBucketVersioning"
+              - "s3:GetBucketWebsite"
+              - "s3:GetLifecycleConfiguration"
+              - "s3:GetObject"
+              - "s3:GetObjectAcl"
+              - "s3:GetObjectTagging"
+              - "s3:GetObjectTorrent"
+              - "s3:GetObjectVersion"
+              - "s3:GetObjectVersionAcl"
+              - "s3:GetObjectVersionTagging"
+              - "s3:GetObjectVersionTorrent"
+              - "s3:GetReplicationConfiguration"
+              - "s3:ListAllMyBuckets"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:ListBucketVersions"
+              - "s3:ListMultipartUploadParts"
+            Resource: "arn:aws:s3:::codepipeline*"
+      PolicyName: AccessProxy-read-codepipeline
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxyECRLogin:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "ecr:GetAuthorizationToken"
+            Resource: "*"
+      PolicyName: AccessProxy-ecr-login
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxySQSSend:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "sqs:ChangeMessageVisibility"
+              - "sqs:ChangeMessageVisibilityBatch"
+              - "sqs:CreateQueue"
+              - "sqs:GetQueueAttributes"
+              - "sqs:GetQueueUrl"
+              - "sqs:ListDeadLetterSourceQueues"
+              - "sqs:ListQueues"
+              - "sqs:PurgeQueue"
+              - "sqs:ReceiveMessage"
+              - "sqs:SendMessage"
+              - "sqs:SendMessageBatch"
+              - "sqs:SetQueueAttributes"
+            Resource: "arn:aws:sqs:us-west-2:*:AccessProxy-fluentd-sqs"
+      PolicyName: AccessProxy-sqs-send
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxyCredstashRead:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "dynamodb:GetItem"
+              - "dynamodb:Query"
+              - "dynamodb:Scan"
+            Resource: "arn:aws:dynamodb:*:*:table/credential-store"
+      PolicyName: AccessProxy-credstash
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxyTagAccess:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "ec2:DescribeTags"
+            Resource: "*"
+      PolicyName: AccessProxy-describe-tags
+      Roles:
+        -
+          Ref: AccessProxyRole
+  AccessProxyCodeDeploy:
+    Type: "AWS::IAM::Policy"
+    DependsOn: AccessProxyRole
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action:
+              - "codedeploy:*"
+            Resource: "arn:aws:codedeploy:*:*:application:AccessProxy-*"
+      PolicyName: AccessProxy-code-deploy
+      Roles:
+        -
+          Ref: AccessProxyRole
