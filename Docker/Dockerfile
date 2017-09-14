@@ -23,15 +23,15 @@ RUN yum-config-manager --add-repo https://openresty.org/package/centos/openresty
 RUN yum install -y openresty openresty-resty
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin/:/usr/local/openresty/nginx/sbin/:/usr/local/openresty/bin/
 
+# Install app-specific packages
+RUN yum install -y rubygem-sass python-virtualenv git
+
 # Logs and setup
 USER root
 RUN  ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
 	&& ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
 COPY etc/conf.d /usr/local/openresty/nginx/conf/conf.d/
 COPY etc/nginx.conf /usr/local/openresty/nginx/conf/
-
-# Install app-specific packages
-RUN yum install -y rubygem-sass python-virtualenv git
 
 # User to run things
 RUN useradd -ms /bin/bash user
