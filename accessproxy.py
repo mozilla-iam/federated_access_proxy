@@ -176,7 +176,7 @@ def api_ssh_certificate():
     SSH_CA_PUB = './scripts/ca_user_key.pub'
     verify_user_ca()
 
-    with open(SSH_CA_PUB, 'rb') as fd:
+    with open(SSH_CA_PUB, 'r') as fd:
         response = {}
         response['certificate'] = fd.read()
 
@@ -216,13 +216,13 @@ def api_ssh():
     if ecode != 0:
         return render_template('denied.html', reason='SSH credentials generation failed'), 500
     try:
-        with open(SSH_KEY_FILE, 'rb') as fd:
+        with open(SSH_KEY_FILE, 'r') as fd:
             response['private_key'] = fd.read()
         os.remove(SSH_KEY_FILE)
-        with open(SSH_KEY_FILE + '.pub', 'rb') as fd:
+        with open(SSH_KEY_FILE + '.pub', 'r') as fd:
             response['public_key'] = fd.read()
         os.remove(SSH_KEY_FILE + '.pub')
-        with open(SSH_KEY_FILE + '-cert.pub', 'rb') as fd:
+        with open(SSH_KEY_FILE + '-cert.pub', 'r') as fd:
             response['certificate'] = fd.read()
         os.remove(SSH_KEY_FILE + '-cert.pub')
     except:
