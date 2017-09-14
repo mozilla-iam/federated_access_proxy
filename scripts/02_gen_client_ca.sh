@@ -8,7 +8,7 @@ cd $(dirname ${BASH_SOURCE[0]})
 
 function keygen()
 {
-	ssh-keygen -t ${CA_KEY_ALG} -b ${CA_KEY_BIT} -C "${CA_USER_COMMENT}" $*
+	ssh-keygen -N '' -t ${CA_KEY_ALG} -b ${CA_KEY_BIT} -C "${CA_USER_COMMENT}" $*
 }
 
 keygen -f "${CA_USER_KEY}" || {

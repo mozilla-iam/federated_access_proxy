@@ -32,6 +32,17 @@ assets.register('css_all', css)
 # Required to load svg
 mimetypes.add_type('image/svg+xml', '.svg')
 
+def verify_user_ca(user_ca='./scripts/user_ca_key'):
+    SSH_GEN_CA_SCRIPT = './scripts/02_gen_client_ca.sh'
+
+    if (os.path.isfile(user_ca) or os.path.isfile(user_ca+'.pub')):
+        return True
+    ecode = subprocess.call([SSH_GEN_CA_SCRIPT])
+    app.logger.debug('Ran SSH_GEN_CA_SCRIPT exit code is {}'.format(ecode))
+    if ecode != 0:
+        return True
+    return False
+
 def load_session_hack(cli_token):
     """
     Loads a session manually for a certain cli_token
@@ -156,6 +167,24 @@ def api_session():
 def api_ping():
     return jsonify({'PONG': time.time()}), 200
 
+@app.route('/api/ssh/certificate')
+def api_ssh_certificate():
+    """
+    Returns the public key of the access proxy certificate
+    """
+
+    SSH_CA_PUB = './scripts/ca_user_key.pub'
+    verify_user_ca()
+
+    with open(SSH_CA_PUB, 'rb') as fd:
+        response = {}
+        response['certificate'] = fd.read()
+
+    if response:
+        return jsonify(response), 200
+    else:
+        return render_template('denied.html', reason='No SSH Public CA'), 500
+
 @app.route('/api/ssh/', methods=['GET'])
 def api_ssh():
     """
@@ -165,6 +194,8 @@ def api_ssh():
     SSH_GEN_SCRIPT = './scripts/04_gen_signed_client_key.sh'
     SSH_FILES_DIR = '/dev/shm/ssh/'
     SSH_KEY_FILE = SSH_FILES_DIR + 'key_file'
+
+    verify_user_ca()
 
     response = {'private_key': '', 'public_key': '', 'certificate': ''}
 
@@ -198,7 +229,7 @@ def api_ssh():
         import traceback
         app.logger.debug(traceback.format_exc())
         app.logger.debug('Failed to read SSH credentials')
-        return render_template('denied.html', 'SSH credentials generation failed'), 500
+        return render_template('denied.html', reason='SSH credentials generation failed'), 500
 
     app.logger.debug('Deliverying SSH key data to cli client')
     return jsonify(response), 200
