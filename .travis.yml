@@ -2,8 +2,6 @@ language: python
 sudo: required
 services:
   - docker
-python:
-  - 3.6
 before_install:
   - pip install flake8
   - flake8 *.py
