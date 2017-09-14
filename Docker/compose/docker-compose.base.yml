@@ -1,10 +1,6 @@
 version: '2'
 services:
     web:
-        build:
-            context: ../
-            dockerfile: Dockerfile
-        image: accessproxy:latest
         volumes:
             - sessions:/var/tmp/sessions
         restart: always
