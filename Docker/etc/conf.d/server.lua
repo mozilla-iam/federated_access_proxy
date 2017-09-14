@@ -19,7 +19,7 @@ local function cs_get(key)
       return fe
   end
 
-  local f = io.popen("/srv/app/venv/bin/credstash get "..key)
+  local f = io.popen("/srv/app/venv/bin/credstash -r us-west-2 get "..key.." app=accessproxy")
   local r = f:read()
   f:close()
   return r
