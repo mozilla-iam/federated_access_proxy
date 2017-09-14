@@ -11,6 +11,10 @@ compose: compose/docker-compose.base.yml
 	touch compose/local.env
 	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml up
 
+compose-detach: compose/docker-compose.base.yml
+	touch compose/local.env
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml up -d
+
 compose-staging: compose/docker-compose.base.yml
 	touch compose/local.env
 	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.stg.yml up
@@ -31,4 +35,4 @@ awslogin: Dockerfile build
 	@echo "Uploading image to hub"
 	docker push $(HUB_URL)/$(IMAGE_NAME):latest
 
-.PHONY: build run awslogin compose compose-staging compose-production
+.PHONY: build run awslogin compose compose-detach compose-staging compose-production
