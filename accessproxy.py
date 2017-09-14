@@ -183,7 +183,7 @@ def api_ssh():
     ecode = subprocess.call([SSH_GEN_SCRIPT, username])
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
     if ecode != 0:
-        return render_template('denied.html', 'SSH credentials generation failed'), 500
+        return render_template('denied.html', reason='SSH credentials generation failed'), 500
     try:
         with open(SSH_KEY_FILE, 'rb') as fd:
             response['private_key'] = fd.read()
