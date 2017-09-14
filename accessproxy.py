@@ -4,7 +4,7 @@
 #
 # Contributors: Guillaume Destuynder <gdestuynder@mozilla.com>
 
-from flask import Flask, request, session, jsonify,  render_template
+from flask import Flask, request, session, jsonify, render_template
 from flask_session import Session
 from flask_assets import Environment, Bundle
 
@@ -41,17 +41,20 @@ def load_session_hack(cli_token):
     # XXX FIXME replace this by a custom session handler for Flask
     from werkzeug.contrib.cache import FileSystemCache
     import pickle
-    cache = FileSystemCache(app.config['SESSION_FILE_DIR'], threshold=app.config['SESSION_FILE_THRESHOLD'], mode=app.config['SESSION_FILE_MODE'])
+    cache = FileSystemCache(app.config['SESSION_FILE_DIR'],
+                            threshold=app.config['SESSION_FILE_THRESHOLD'],
+                            mode=app.config['SESSION_FILE_MODE'])
     found = False
     for fn in cache._list_dir():
-         with open(fn, 'rb') as f:
-             fot = pickle.load(f)
-             local_session = pickle.load(f)
-             if type(local_session) is not dict:
-                 continue
-             if local_session.get('cli_token') == cli_token:
-                 found = True
-                 break
+        with open(fn, 'rb') as f:
+            fot = pickle.load(f)
+            del fot # Unused
+            local_session = pickle.load(f)
+            if type(local_session) is not dict:
+                continue
+            if local_session.get('cli_token') == cli_token:
+                found = True
+                break
     if not found:
         return None
     return local_session
@@ -102,7 +105,7 @@ def main():
     session['ssh_port'] = ssh_port
     session['ssh_host'] = ssh_host
 
-    if (session.get('cli_token') == None):
+    if (not session.get('cli_token')):
         session['cli_token'] = cli_token
     else:
         if not verify_cli_token(cli_token):
@@ -112,9 +115,12 @@ def main():
 
     session['ap_session'] = ap_session
 
-    app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user, session.sid, ap_session, ssh_host, ssh_port))
+    app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user,
+                                                                                                     session.sid,
+                                                                                                     ap_session,
+                                                                                                     ssh_host,
+                                                                                                     ssh_port))
     app.logger.debug(str(ap_session))
-
     return render_template('main.html')
 
 @app.route('/api/session', methods=['GET'])
@@ -124,7 +130,7 @@ def api_session():
     """
     cli_token = request.args.get('cli_token')
     response = {'cli_token_authenticated': False,
-               'ap_session': ''}
+                'ap_session': ''}
 
     local_session = load_session_hack(cli_token)
     if not local_session:
@@ -135,12 +141,13 @@ def api_session():
         return render_template('denied.html', reason='cli token verification failure'), 403
 
     if (local_session.get('sent_ap_session')):
-        app.logger.error('Same cli client tried to get the ap_session data more than once (security risk), destroying session')
+        app.logger.error('Same cli client tried to get the ap_session data more than once (security risk)'
+                         ', destroying session')
         session.clear()
         return render_template('denied.html', reason='Session was already issued'), 403
 
     response['ap_session'] = local_session.get('ap_session')
-    response['cli_token_authenticated'] =  True
+    response['cli_token_authenticated'] = True
     session['sent_ap_session'] = True
     app.logger.debug('Delivering session data to cli client')
     return jsonify(response), 200
@@ -155,15 +162,13 @@ def api_ssh():
     Requests a new, valid SSH certificate
     """
 
-    SSH_GEN_SCRIPT='/var/www/accessproxy/scripts/04_gen_signed_client_key.sh'
-    SSH_FILES_DIR='/dev/shm/ssh/'
-    SSH_KEY_FILE=SSH_FILES_DIR+'key_file'
+    SSH_GEN_SCRIPT = '/var/www/accessproxy/scripts/04_gen_signed_client_key.sh'
+    SSH_FILES_DIR = '/dev/shm/ssh/'
+    SSH_KEY_FILE = SSH_FILES_DIR + 'key_file'
 
     response = {'private_key': '', 'public_key': '', 'certificate': ''}
 
     # GET parameter set up
-    required_params = ['type', 'host', 'port', 'cli_token']
-    params = request.args.to_dict()
     cli_token = request.args.get('cli_token')
 
     local_session = load_session_hack(cli_token)
@@ -177,18 +182,18 @@ def api_ssh():
         username = username.replace('@', '_')
     ecode = subprocess.call([SSH_GEN_SCRIPT, username])
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
-    if ecode !=0:
+    if ecode != 0:
         return render_template('denied.html', 'SSH credentials generation failed'), 500
     try:
         with open(SSH_KEY_FILE, 'rb') as fd:
             response['private_key'] = fd.read()
         os.remove(SSH_KEY_FILE)
-        with open(SSH_KEY_FILE+'.pub', 'rb') as fd:
+        with open(SSH_KEY_FILE + '.pub', 'rb') as fd:
             response['public_key'] = fd.read()
-        os.remove(SSH_KEY_FILE+'.pub')
-        with open(SSH_KEY_FILE+'-cert.pub', 'rb') as fd:
+        os.remove(SSH_KEY_FILE + '.pub')
+        with open(SSH_KEY_FILE + '-cert.pub', 'rb') as fd:
             response['certificate'] = fd.read()
-        os.remove(SSH_KEY_FILE+'-cert.pub')
+        os.remove(SSH_KEY_FILE + '-cert.pub')
     except:
         import traceback
         app.logger.debug(traceback.format_exc())
