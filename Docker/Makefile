@@ -9,7 +9,7 @@ build: Dockerfile
 
 compose: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.dev.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml up
 
 compose-staging: compose/docker-compose.base.yml
 	touch compose/local.env
