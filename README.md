@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/mozilla-iam/federated_access_proxy.svg?branch=master)](https://travis-ci.org/mozilla-iam/federated_access_proxy)
+
 # STATUS: POC
 
 # Federated Access Proxy
