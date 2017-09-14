@@ -6,4 +6,4 @@ before_install:
   - pip install flake8
   - flake8 *.py
   - cd Docker && make
-  - cd Docker && make compose-detach
+  - make compose-detach
