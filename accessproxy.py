@@ -32,17 +32,6 @@ assets.register('css_all', css)
 # Required to load svg
 mimetypes.add_type('image/svg+xml', '.svg')
 
-def verify_user_ca(user_ca='./scripts/ca_user_key'):
-    SSH_GEN_CA_SCRIPT = './scripts/02_gen_client_ca.sh'
-
-    if (os.path.isfile(user_ca) or os.path.isfile(user_ca + '.pub')):
-        return True
-    ecode = subprocess.call([SSH_GEN_CA_SCRIPT])
-    app.logger.debug('Ran SSH_GEN_CA_SCRIPT exit code is {}'.format(ecode))
-    if ecode != 0:
-        return True
-    return False
-
 def load_session_hack(cli_token):
     """
     Loads a session manually for a certain cli_token
@@ -175,15 +164,9 @@ def api_ssh_certificate():
     """
     Returns the public key of the access proxy certificate
     """
-
-    SSH_CA_PUB = './scripts/ca_user_key.pub'
-    verify_user_ca()
-
-    with open(SSH_CA_PUB, 'r') as fd:
-        response = {}
-        response['certificate'] = fd.read()
-
-    if response:
+    ssh_user_ca_pub = app.config.get('CA_USER_PUBLIC_KEY')
+    if ssh_user_ca_pub:
+        response = {'certificate': ssh_user_ca_pub}
         return jsonify(response), 200
     else:
         return render_template('denied.html', reason='No SSH Public CA'), 500
@@ -197,8 +180,6 @@ def api_ssh():
     SSH_GEN_SCRIPT = './scripts/04_gen_signed_client_key.sh'
     SSH_FILES_DIR = '/dev/shm/ssh/'
     SSH_KEY_FILE = SSH_FILES_DIR + 'key_file'
-
-    verify_user_ca()
 
     response = {'private_key': '', 'public_key': '', 'certificate': ''}
 
@@ -214,8 +195,21 @@ def api_ssh():
     if not username:
         username = local_session.get('username')
         username = username.replace('@', '_')
-    ecode = subprocess.call([SSH_GEN_SCRIPT, username])
+
+    # Temporarily load private key of the CA
+    # XXX FIXME Rewrite ssh-key in Python (for ex.) and do this in memory,
+    # until true signing is possible from KMS
+    with open(SSH_FILES_DIR + 'ca_user_key') as fd:
+        fd.write(app.config.get('CA_USER_SECRET_KEY'))
+    with open(SSH_FILES_DIR + 'ca_user_key.pub') as fd:
+        fd.write(app.config.get('CA_USER_PUBLIC_KEY'))
+    ecode = subprocess.call([SSH_GEN_SCRIPT, username], env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
+    try:
+        os.remove(SSH_FILES_DIR + 'ca_user_key')
+    except OSError:
+        app.logger.error('Failed to remove ca_user_key - this is a security risk')
+
     if ecode != 0:
         return render_template('denied.html', reason='SSH credentials generation failed'), 500
     try:

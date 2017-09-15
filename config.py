@@ -33,17 +33,22 @@ class DefaultConfig(object):
     """Defaults for the configuration objects."""
     DEBUG = True
     LOG_LEVEL = logging.DEBUG
+
     PERMANENT_SESSION = True
     PERMANENT_SESSION_LIFETIME = 86400
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SECURE = True
 
     SECRET_KEY = get_secret('accessproxy.flask_secret', {'app': 'accessproxy'})
-    REVERSE_PROXY_COOKIE_NAME = 'session'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = True
     SESSION_TYPE = 'filesystem'
     SESSION_FILE_THRESHOLD = 5000
     SESSION_FILE_DIR = '/tmp/accessproxy/sessions/'
     SESSION_FILE_MODE = 0o600
+
+    REVERSE_PROXY_COOKIE_NAME = 'session'
+
+    CA_USER_SECRET_KEY = get_secret('accessproxy.ca_user_key', {'app': 'accessproxy'})
+    CA_USER_PUBLIC_KEY = get_secret('accessproxy.ca_user_key_pub', {'app': 'accessproxy'})
 
 class ProductionConfig(DefaultConfig):
     LOG_LEVEL = logging.INFO

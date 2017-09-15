@@ -51,3 +51,5 @@ Values required:
 - `accessproxy.discovery_url`
 - `accessproxy.client_secret`
 - `accessproxy.client_id`
+- `accessproxy.ca_user_key` (see `scripts/02_gen_client_ca.sh`)
+- `accessproxy.ca_user_key_pub` (ditto)
