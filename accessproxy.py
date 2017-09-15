@@ -32,10 +32,10 @@ assets.register('css_all', css)
 # Required to load svg
 mimetypes.add_type('image/svg+xml', '.svg')
 
-def verify_user_ca(user_ca='./scripts/user_ca_key'):
+def verify_user_ca(user_ca='./scripts/ca_user_key'):
     SSH_GEN_CA_SCRIPT = './scripts/02_gen_client_ca.sh'
 
-    if (os.path.isfile(user_ca) or os.path.isfile(user_ca+'.pub')):
+    if (os.path.isfile(user_ca) or os.path.isfile(user_ca + '.pub')):
         return True
     ecode = subprocess.call([SSH_GEN_CA_SCRIPT])
     app.logger.debug('Ran SSH_GEN_CA_SCRIPT exit code is {}'.format(ecode))
@@ -75,6 +75,9 @@ def verify_cli_token(cli_token, session=session):
     """
     Check the cli_token provided is valid and matches the HTTP session, else clear session / bail
     """
+    if not session:
+        return False
+
     if (session.get('cli_token')):
         if (cli_token != session.get('cli_token')):
             app.logger.error('User with same session provided a new cli_token, destroying session')
