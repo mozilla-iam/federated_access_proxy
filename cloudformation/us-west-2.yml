@@ -3,11 +3,11 @@ Description: "Mozilla Federated Access Proxy"
 Mappings:
   dev:
       us-west-2:
-        AMI: ami-983daaf8
+        AMI: ami-5bc13c23
         CertificateARN: "arn:aws:acm:us-west-2:656532927350:certificate/93b81548-c28d-4912-b621-fc6cc6b52274"
   prod:
       us-west-2:
-        AMI: ami-983daaf8
+        AMI: ami-5bc13c23
         CertificateARN: ""
 Parameters:
   SSHKeyName:
