@@ -1,0 +1,4 @@
+# List revoked certificates here and run 05_gen_krl.sh
+# Serve the resulting file to OpenSSH servers to use as KRL
+# Example:
+certs/key_file-cert.pub

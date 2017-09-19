@@ -29,11 +29,15 @@ ssh-keygen -t ${USER_KEY_ALG} -b ${USER_KEY_BIT} -C "${USER_KEY_COMMENT}" -f ${U
 	exit 126
 }
 # This is the signature of the key
-ssh-keygen -s ${CA_USER_KEY} -I user_username -n ${USERNAME} -V ${USER_KEY_EXPIRATION} ${USER_KEY_FILE} || {
+ssh-keygen -s ${CA_USER_KEY} -I "user_key_${USERNAME}_from_ap_${_HOSTNAME}" -n "${USERNAME}" -V ${USER_KEY_EXPIRATION} ${USER_KEY_FILE} || {
 	echo "Failed to sign user key"
 	rm -f ${USER_KEY_FILE}*
 	exit 125
 }
+
+# Optional: Collect certificates we issued in case we need to revoke them later
+# mkdir -p certs
+#cp ${USER_KEY_FILE}-cert.pub ./certs
 
 echo "Key and certificate generated for user ${USERNAME}, please securely remove them after use:"
 ls -la ${USER_KEY_DIR}
