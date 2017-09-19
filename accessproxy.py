@@ -130,7 +130,7 @@ def main():
             return render_template('denied.html', reason='cli token verification failure'), 403
 
     if not verify_authorization(user, ssh_user, ssh_host, groups):
-        return render_template('denied.hml',
+        return render_template('denied.html',
                                reason='Sorry, you do not have permission to access the requested host'), 403
     # Reverse proxy cookie - this effectively authorize API access for the CLI client
     ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
