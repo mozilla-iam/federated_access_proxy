@@ -129,12 +129,14 @@ def main():
         if not verify_cli_token(cli_token):
             return render_template('denied.html', reason='cli token verification failure'), 403
 
-    if not verify_authorization(user, ssh_user, ssh_host, groups):
+    if not verify_authorization(user, ssh_user, ssh_host, groups.split(',')):
+        session['cli_token_authenticated'] = False
         return render_template('denied.html',
                                reason='Sorry, you do not have permission to access the requested host'), 403
     # Reverse proxy cookie - this effectively authorize API access for the CLI client
     ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
     session['ap_session'] = ap_session
+    session['cli_token_authenticated'] = True
 
     app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user,
                                                                                                      session.sid,
@@ -168,9 +170,9 @@ def api_session():
         return render_template('denied.html', reason='Session was already issued'), 403
 
     response['ap_session'] = local_session.get('ap_session')
-    response['cli_token_authenticated'] = True
+    response['cli_token_authenticated'] = local_session.get('cli_token_authenticated')
     session['sent_ap_session'] = True
-    app.logger.debug('Delivering session data to cli client')
+    app.logger.debug('Delivering proxy/web session tokens to cli client')
     return jsonify(response), 200
 
 @app.route('/api/ping')
