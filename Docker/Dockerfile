@@ -42,6 +42,8 @@ WORKDIR /srv/app
 # Deploy app as user
 ENV LANG=en_US.utf8
 ENV LC_ALL=en_US.utf8
+# Force rebuild this step
+ARG GITCACHE=1
 RUN git clone https://github.com/mozilla-iam/federated_access_proxy/ ./
 RUN python3.6 -m venv venv && source venv/bin/activate && \
     cd /srv/app/ && pip3.6 install -r requirements.txt
