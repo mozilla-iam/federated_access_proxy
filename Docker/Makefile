@@ -1,6 +1,7 @@
-IMAGE_NAME = "accessproxy"
-PORTS = "8080:80"
-HUB_URL = "656532927350.dkr.ecr.us-west-2.amazonaws.com"
+IMAGE_NAME	:= "accessproxy"
+PORTS		:= "8080:80"
+HUB_URL		:= "656532927350.dkr.ecr.us-west-2.amazonaws.com"
+COMPOSE_CMD	:= "up"
 
 all: build
 
@@ -9,19 +10,19 @@ build: Dockerfile
 
 compose: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml $(COMPOSE_CMD)
 
 compose-detach: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml up -d
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.rebuild.yml -f compose/docker-compose.dev.yml $(COMPOSE_CMD) -d
 
 compose-staging: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.stg.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.stg.yml $(COMPOSE_CMD)
 
 compose-production: compose/docker-compose.base.yml
 	touch compose/local.env
-	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.prod.yml up
+	docker-compose -f compose/docker-compose.base.yml -f compose/docker-compose.norebuild.yml -f compose/docker-compose.prod.yml $(COMPOSE_CMD)
 
 run: Dockerfile
 	docker run -i -p $(PORTS)  -t $(IMAGE_NAME)
