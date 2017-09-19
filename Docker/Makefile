@@ -5,7 +5,7 @@ HUB_URL = "656532927350.dkr.ecr.us-west-2.amazonaws.com"
 all: build
 
 build: Dockerfile
-	docker build --build-arg GITCACHE=$(date +%s) -t $(IMAGE_NAME) .
+	docker build --build-arg GITCACHE=$(shell date +%s) -t $(IMAGE_NAME) .
 
 compose: compose/docker-compose.base.yml
 	touch compose/local.env
