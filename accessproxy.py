@@ -220,9 +220,9 @@ def api_ssh():
     except FileExistsError:
         pass
 
-    with open(SSH_FILES_DIR + 'ca_user_key', 'w') as fd:
+    with open(os.open(SSH_FILES_DIR + 'ca_user_key', os.O_WRONLY | os.O_CREAT, mode=0o600), 'w') as fd:
         fd.write(app.config.get('CA_USER_SECRET_KEY'))
-    with open(SSH_FILES_DIR + 'ca_user_key.pub', 'w') as fd:
+    with open(os.open(SSH_FILES_DIR + 'ca_user_key.pub', os.O_WRONLY | os.O_CREAT, mode=0o644), 'w') as fd:
         fd.write(app.config.get('CA_USER_PUBLIC_KEY'))
     ecode = subprocess.call([SSH_GEN_SCRIPT, username + group_list],
                             env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
