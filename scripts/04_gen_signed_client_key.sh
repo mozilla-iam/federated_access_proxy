@@ -49,7 +49,7 @@ ssh-keygen -t ${USER_KEY_ALG} -b ${USER_KEY_BIT} -C "${USER_KEY_COMMENT}" -f ${U
 }
 
 # This is the signature of the key
-ssh-keygen -z ${serial} -s ${CA_USER_KEY} -I "user_key_${USERNAME}_from_ap_${_HOSTNAME}" -n "user=${USERNAME}${GROUP_DATA}" \
+ssh-keygen -z ${serial} -s ${CA_USER_KEY} -I "user_key_${USERNAME}" -n "${USERNAME}${GROUP_DATA}" \
     -V ${USER_KEY_EXPIRATION} ${USER_KEY_FILE} || {
 	echo "Failed to sign user key"
 	rm -f ${USER_KEY_FILE}*
