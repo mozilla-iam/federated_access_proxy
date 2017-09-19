@@ -59,6 +59,17 @@ def load_session_hack(cli_token):
         return None
     return local_session
 
+def verify_authorization(user, ssh_user, ssh_host, groups):
+    # XXX FIXME support for ACL rule engine
+    # We only let you in if we verified your username matches your request, i.e. we know it's you
+    if user != ssh_user:
+        return False
+
+    if 'vpn_default' in groups:
+        return True
+
+    # Default is no access
+    return False
 
 def verify_cli_token(cli_token, session=session):
     """
@@ -98,13 +109,16 @@ def main():
     required_headers = ['X-Forwarded-User', 'X-Forwarded-Groups']
     if not set(required_headers).issubset(request.headers.keys()):
         return render_template('denied.html', reason='Incorrect HEADERS'), 403
+
+    # user is a verified user
     user = request.headers.get('X-Forwarded-User')
     groups = request.headers.get('X-Forwarded-Groups')
+    # The upstream access proxy separate groups with '|', but we use ','
+    groups = groups.replace('|', ',')
 
     # Session set up
     session['username'] = user
-    # The upstream access proxy separate groups with '|', but we use ','
-    session['groups'] = groups.replace('|', ',')
+    session['groups'] = groups
     session['ssh_user'] = ssh_user
     session['ssh_port'] = ssh_port
     session['ssh_host'] = ssh_host
@@ -114,9 +128,12 @@ def main():
     else:
         if not verify_cli_token(cli_token):
             return render_template('denied.html', reason='cli token verification failure'), 403
-    # Reverse proxy cookie
-    ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
 
+    if not verify_authorization(user, ssh_user, ssh_host, groups):
+        return render_template('denied.hml',
+                               reason='Sorry, you do not have permission to access the requested host'), 403
+    # Reverse proxy cookie - this effectively authorize API access for the CLI client
+    ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
     session['ap_session'] = ap_session
 
     app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user,
@@ -191,11 +208,7 @@ def api_ssh():
     if not verify_cli_token(cli_token, session=local_session):
         return 'Access denied', 403
 
-    # Get user supplied username, if not available use profile user name
-    username = local_session.get('ssh_user')
-    if not username:
-        username = local_session.get('username')
-        username = username.replace('@', '_')
+    username = local_session.get('username')
 
     groups = local_session.get('groups')
     group_list = ''
