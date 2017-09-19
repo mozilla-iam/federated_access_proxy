@@ -80,9 +80,9 @@ def verify_cli_token(cli_token, session=session):
 
     if (session.get('cli_token')):
         if (cli_token != session.get('cli_token')):
-            app.logger.error('User with same session provided a new cli_token, destroying session')
+            app.logger.error('User with same session provided a new cli_token, destroying current session')
             session.clear()
-            return False
+            return True
         return True
     else:
         app.logger.error('No cli_token found')
@@ -132,7 +132,8 @@ def main():
     if not verify_authorization(user, ssh_user, ssh_host, groups.split(',')):
         session['cli_token_authenticated'] = False
         return render_template('denied.html',
-                               reason='Sorry, you do not have permission to access the requested host'), 403
+                               reason='Sorry, you do not have permission to access the requested host'
+                               'or with the requested username'), 403
     # Reverse proxy cookie - this effectively authorize API access for the CLI client
     ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
     session['ap_session'] = ap_session
