@@ -204,10 +204,10 @@ def api_ssh():
         # We enforce that here just in case
         if len(groups) > 255:
             app.logger.warning('More than 255 groups found, reducing the list to the first 255 groups for user'
-                    '{}'.format(username))
+                               '{}'.format(username))
             groups = groups[0:255]
             # Don't forget the leading comma as we have a username in front of us
-            group_list = ','+','.join(groups)
+            group_list = ',' + ','.join(groups)
     else:
         groups = []
         group_list = ''
@@ -224,7 +224,8 @@ def api_ssh():
         fd.write(app.config.get('CA_USER_SECRET_KEY'))
     with open(SSH_FILES_DIR + 'ca_user_key.pub', 'w') as fd:
         fd.write(app.config.get('CA_USER_PUBLIC_KEY'))
-    ecode = subprocess.call([SSH_GEN_SCRIPT, username+group_list], env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
+    ecode = subprocess.call([SSH_GEN_SCRIPT, username + group_list],
+                            env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
     try:
         os.remove(SSH_FILES_DIR + 'ca_user_key')
