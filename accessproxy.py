@@ -103,7 +103,8 @@ def main():
 
     # Session set up
     session['username'] = user
-    session['groups'] = groups
+    # The upstream access proxy separate groups with '|', but we use ','
+    session['groups'] = groups.replace('|', ',')
     session['ssh_user'] = ssh_user
     session['ssh_port'] = ssh_port
     session['ssh_host'] = ssh_host
@@ -196,18 +197,38 @@ def api_ssh():
         username = local_session.get('username')
         username = username.replace('@', '_')
 
+    groups = local_session.get('groups')
+    if groups:
+        groups = groups.split(',')
+        # SSH uses a maximum of 256 principales, so 255 groups + 1 username
+        # We enforce that here just in case
+        if len(groups) > 255:
+            app.logger.warning('More than 255 groups found, reducing the list to the first 255 groups for user'
+                    '{}'.format(username))
+            groups = groups[0:255]
+            # Don't forget the leading comma as we have a username in front of us
+            group_list = ','+','.join(groups)
+    else:
+        groups = []
+        group_list = ''
+
     # Temporarily load private key of the CA
     # XXX FIXME Rewrite ssh-key in Python (for ex.) and do this in memory,
     # until true signing is possible from KMS
-    with open(SSH_FILES_DIR + 'ca_user_key') as fd:
+    try:
+        os.mkdir(SSH_FILES_DIR)
+    except FileExistsError:
+        pass
+
+    with open(SSH_FILES_DIR + 'ca_user_key', 'w') as fd:
         fd.write(app.config.get('CA_USER_SECRET_KEY'))
-    with open(SSH_FILES_DIR + 'ca_user_key.pub') as fd:
+    with open(SSH_FILES_DIR + 'ca_user_key.pub', 'w') as fd:
         fd.write(app.config.get('CA_USER_PUBLIC_KEY'))
-    ecode = subprocess.call([SSH_GEN_SCRIPT, username], env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
+    ecode = subprocess.call([SSH_GEN_SCRIPT, username+group_list], env={'CA_USER_KEY': SSH_FILES_DIR + 'ca_user_key'})
     app.logger.debug('Ran SSH_GEN_SCRIPT exit code is {}'.format(ecode))
     try:
         os.remove(SSH_FILES_DIR + 'ca_user_key')
-    except OSError:
+    except FileNotFoundError:
         app.logger.error('Failed to remove ca_user_key - this is a security risk')
 
     if ecode != 0:
