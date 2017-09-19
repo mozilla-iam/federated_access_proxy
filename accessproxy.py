@@ -198,6 +198,7 @@ def api_ssh():
         username = username.replace('@', '_')
 
     groups = local_session.get('groups')
+    group_list = ''
     if groups:
         groups = groups.split(',')
         # SSH uses a maximum of 256 principales, so 255 groups + 1 username
@@ -206,11 +207,10 @@ def api_ssh():
             app.logger.warning('More than 255 groups found, reducing the list to the first 255 groups for user'
                                '{}'.format(username))
             groups = groups[0:255]
-            # Don't forget the leading comma as we have a username in front of us
-            group_list = ',' + ','.join(groups)
+        # Don't forget the leading comma as we have a username in front of us
+        group_list = ',' + ','.join(groups)
     else:
         groups = []
-        group_list = ''
 
     # Temporarily load private key of the CA
     # XXX FIXME Rewrite ssh-key in Python (for ex.) and do this in memory,
