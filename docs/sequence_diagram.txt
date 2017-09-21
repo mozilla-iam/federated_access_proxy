@@ -1,0 +1,47 @@
+# This file can be used with http://sequencediagram.org/
+# And rendered to an image file
+
+title CLI & Federated Access Proxy (SSH)
+
+actor "Operator" as user
+participant "User's CLI SSH Client" as ssh
+participant "bcorp \naccess proxy client" as bcorp#lightblue
+participant "User's Browser (User-Agent)" as UA
+participant "**Federated Access Proxy**\n//ap.net//" as AP#orange
+participant "Target SSH Server\n//ssh.target.net//" as sshd
+
+abox over AP#lightgrey: Certificate Authority (CA)
+abox over sshd#lightgrey: Public key of CA
+
+fontfamily mono
+user->ssh: ssh -oProxyCommand='bcorp %h:%p:%u' ssh.target.net
+
+ssh->bcorp: bcorp ssh.target.net:22:operator
+
+fontfamily sans-serif
+bcorp->UA: Start default web browser\nGET ap.net/?type=ssh&cli_token=**s3cr3t**&...
+UA->AP: Authenticate (SSO prompt, etc.)
+UA<--AP: Successful authentication response {'cookie': '**aps3cr3t**'}
+user->>UA: Closes window ("I'm authenticated!")
+
+bcorp->AP: Pool API for response\nGET ap.net/api/ssh/session?cli_token=**s3cr3t**
+bcorp<--AP: Successful response\n { session_token: **aps3cr3t** ...}
+bcorp->bcorp: caches session_token for future requests
+bcorp->AP: Give me credentials!\nGET ap.net/api/ssh/credentials?cli_token=**s3cr3t** [cookie: **aps3cr3t**] [POST operator public key]
+AP->AP: Verify user is authorize to connect to this target server.
+AP->AP: Generate credentials: sign operator public key valid for 1 hour
+AP->bcorp: Signed public key certificate
+bcorp->ssh: Please load 'Signed public key certificate' and go ahead
+ssh->bcorp: 'SSH-2.0-OpenSSH_7.5...'
+bcorp->sshd: 'SSH-2.0-OpenSSH_7.5...'
+sshd->sshd: Verify certificate and principals match my rules
+sshd->bcorp: 'SSH data...'
+bcorp->ssh: 'SSH data...'
+ssh->user: **\o/ Logged in!**
+
+
+== Optional Optional: TLS Proxy connection\n(SSH client may optionally directly reach the SSHd server) ==
+bcorp->AP: //Optional: CONNECT (:443) 'SSH-2.0-OpenSSH_7.5...'//
+AP->sshd: //'SSH-2.0-OpenSSH_7.5...'//
+ssh<-->sshd: //'SSH data...'//
+ssh->user: **\o/ Logged in!**
