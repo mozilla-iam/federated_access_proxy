@@ -32,6 +32,30 @@ assets.register('css_all', css)
 # Required to load svg
 mimetypes.add_type('image/svg+xml', '.svg')
 
+def wipe_old_sessions_hack(ap_session, cli_token):
+    """
+    Finds all prior sessions for this cli_token that do not match the current session
+    (current session, aka 'ap_session') and drop them as they're now invalid
+    """
+    from werkzeug.contrib.cache import FileSystemCache
+    import pickle
+    cache = FileSystemCache(app.config['SESSION_FILE_DIR'],
+            threshold=app.config['SESSION_FILE_THRESHOLD'],
+            mode=app.config['SESSION_FILE_MODE'])
+    found = False
+    for fn in cache._list_dir():
+        with open(fn, 'rb') as f:
+            fot = pickle.load(f)
+            del fot # Unused
+            local_session = pickle.load(f)
+            if type(local_session) is not dict:
+                continue
+            if (local_session.get('cli_token') == cli_token) and (local_session.get('ap_session') != ap_session):
+                os.remove(fn)
+                app.logger.debug('Removed now invalidated session data for cli_token {}'.format(cli_token))
+                continue
+    return
+
 def load_session_hack(cli_token):
     """
     Loads a session manually for a certain cli_token
@@ -138,6 +162,7 @@ def main():
     ap_session = request.cookies.get(app.config.get('REVERSE_PROXY_COOKIE_NAME'))
     session['ap_session'] = ap_session
     session['cli_token_authenticated'] = True
+    wipe_old_sessions_hack(ap_session, cli_token)
 
     app.logger.info('New user logged in {} (sid {} ap_session {}) requesting access to {}:{}'.format(user,
                                                                                                      session.sid,
