@@ -40,9 +40,9 @@ def wipe_old_sessions_hack(ap_session, cli_token):
     from werkzeug.contrib.cache import FileSystemCache
     import pickle
     cache = FileSystemCache(app.config['SESSION_FILE_DIR'],
-            threshold=app.config['SESSION_FILE_THRESHOLD'],
-            mode=app.config['SESSION_FILE_MODE'])
-    found = False
+                            threshold=app.config['SESSION_FILE_THRESHOLD'],
+                            mode=app.config['SESSION_FILE_MODE'])
+
     for fn in cache._list_dir():
         with open(fn, 'rb') as f:
             fot = pickle.load(f)
