@@ -3,7 +3,12 @@ PORTS		:= "8080:80"
 HUB_URL		:= "656532927350.dkr.ecr.us-west-2.amazonaws.com"
 COMPOSE_CMD	:= "up"
 
-all: build
+all: help
+
+help:
+	@echo "Makefile configuration and targets:"
+	@echo
+	@grep '^[^#[:space:]].*:' Makefile
 
 build: Dockerfile
 	docker build --build-arg GITCACHE=$(shell date +%s) -t $(IMAGE_NAME) .
@@ -36,4 +41,4 @@ awslogin: Dockerfile build
 	@echo "Uploading image to hub"
 	docker push $(HUB_URL)/$(IMAGE_NAME):latest
 
-.PHONY: build run awslogin compose compose-detach compose-staging compose-production
+.PHONY: help build run awslogin compose compose-detach compose-staging compose-production
