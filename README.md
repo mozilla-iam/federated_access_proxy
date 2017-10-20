@@ -22,7 +22,7 @@ network access), beyond corp uses things like:
 This federated access proxy implements this (with optional transport proxying for compatibility and latency reasons, for
 example SSH protocol can be proxied over HTTPS, or not proxied, at the choice of the operator).
 
-The concepts and code behind the federated acecss proxy can be applied to any command-line client for any protocol that
+The concepts and code behind the federated access proxy can be applied to any command-line client for any protocol that
 requires some kind of access token as proof of being authenticated/identified with an identity provider.
 
 ## Sequence diagram - flow with OpenSSH authentication
