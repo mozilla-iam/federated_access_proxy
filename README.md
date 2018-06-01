@@ -2,6 +2,11 @@
 
 # STATUS: POC
 
+
+
+[![Youtube Demo](https://i.imgur.com/yg27j5L.png)](
+https://www.youtube.com/watch?v=P66dAu06KJw "Federated Access Proxy with SSH Demo")
+
 # Federated Access Proxy
 
 ![Diagram](/docs/images/hl_diagram.png?raw=true "High-level diagram")
