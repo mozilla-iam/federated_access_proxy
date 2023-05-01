@@ -7,7 +7,7 @@ credstash==1.13.3
 cryptography==2.0.3
 cssmin==0.2.0
 docutils==0.14
-Flask==0.12.2
+Flask==2.3.2
 Flask-Assets==0.12
 Flask-Session==0.3.1
 idna==2.6
